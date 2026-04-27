@@ -1,0 +1,52 @@
+import json
+import os
+from datetime import datetime
+
+FILE = 'todos.json'
+
+def load_todos():
+    if os.path.exists(FILE):
+        with open(FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return []
+
+def save_todos(todos):
+    with open(FILE, 'w', encoding='utf-8') as f:
+        json.dump(todos, f, ensure_ascii=False, indent=2)
+
+def add_todo(task):
+    todos = load_todos()
+    todos.append({"task": task, "added": datetime.now().strftime("%d.%m %H:%M"), "done": False})
+    save_todos(todos)
+    print(f"✅ Добавлено: {task}")
+
+def list_todos():
+    todos = load_todos()
+    if not todos:
+        print("Пусто!")
+        return
+    for i, todo in enumerate(todos, 1):
+        status = "✅" if todo["done"] else "⏳"
+        print(f"{i}. {status} {todo['task']} ({todo['added']})")
+
+def toggle_done(index):
+    todos = load_todos()
+    if 0 < index <= len(todos):
+        todos[index-1]["done"] = not todos[index-1]["done"]
+        save_todos(todos)
+        print("Обновлено!")
+    else:
+        print("❌ Неверный номер")
+
+while True:
+    cmd = input("\n> ").strip().split(maxsplit=1)
+    if cmd[0] == 'add':
+        add_todo(cmd[1])
+    elif cmd[0] == 'list':
+        list_todos()
+    elif cmd[0] == 'done':
+        toggle_done(int(cmd[1]))
+    elif cmd[0] == 'exit':
+        break
+    else:
+        print("add 'задача' | list | done 1 | exit")
