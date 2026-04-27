@@ -1,0 +1,45 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
+
+def parse_habr_news(count=10):
+    """
+    Парсит топ-N заголовков новостей с Habr.com
+    """
+    url = 'https://habr.com/ru/all/'
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }  # Имитация браузера, чтоб не блокировали
+    
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        print(f"Ошибка: {response.status_code}")
+        return []
+    
+    soup = BeautifulSoup(response.text, 'lxml')
+    
+    # Находим статьи: class="tm-title" в теге <a>
+    articles = soup.find_all('a', class_='tm-title__link')[:count]
+    
+    data = []
+    for article in articles:
+        title = article.text.strip()
+        link = 'https://habr.com' + article.get('href')
+        data.append({'Заголовок': title, 'Ссылка': link})
+        print(f"Найдено: {title[:50]}...")  # Первые 50 символов
+    
+    return data
+
+# Основная функция
+if __name__ == "__main__":
+    print("🚀 Запуск парсинг-бота...")
+    news = parse_habr_news(count=10)  # Топ-10 новостей
+    
+    if news:
+        # Сохраняем в CSV
+        df = pd.DataFrame(news)
+        df.to_csv('habr_news.csv', index=False, encoding='utf-8')
+        print(f"\n✅ Сохранено {len(news)} новостей в habr_news.csv")
+    else:
+        print("❌ Нет данных")
